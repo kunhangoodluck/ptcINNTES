@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心靈屬性超能力測驗</title>
+    <!-- 引入字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=BiauKai+TC&display=swap" rel="stylesheet">
+    <!-- 引入 html2canvas 工具庫，用於生成圖片 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        /* --- 整體風格 --- */
+        body {
+            margin: 0;
+            font-family: 'BiauKai TC', serif;
+            background-color: #FDF5E6;
+            color: #5A4A3E;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #fff;
+            border-radius: 24px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            padding: 20px 40px 40px 40px;
+            box-sizing: border-box;
+            text-align: center;
+            border: 5px solid #EAE0D1;
+        }
+
+        /* --- 頁面切換 --- */
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        /* --- 通用元件 --- */
+        h1, h2, h3 {
+            font-family: 'BiauKai TC', serif;
+            color: #3D2B1F;
+        }
+        p { line-height: 1.8; font-size: 20px; }
+
+        .btn {
+            font-family: 'BiauKai TC', serif;
+            font-size: 28px;
+            padding: 15px 40px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            background-color: #E48B89;
+            color: white;
+            box-shadow: 0 4px 10px rgba(228, 139, 137, 0.4);
+            transition: all 0.2s ease-in-out;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(228, 139, 137, 0.5);
+        }
+        .btn-secondary {
+            background-color: #82C0A4;
+            box-shadow: 0 4px 10px rgba(130, 192, 164, 0.4);
+        }
+        .btn-secondary:hover {
+            box-shadow: 0 6px 15px rgba(130, 192, 164, 0.5);
+        }
+
+        /* --- 測驗頁面 --- */
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { font-family: 'BiauKai TC', serif; background: none; border: 2px solid #EAE0D1; color: #5A4A3E; border-radius: 10px; padding: 5px 15px; font-size: 18px; cursor: pointer; visibility: hidden; }
+        .back-btn.visible { visibility: visible; }
+        .progress-bar { flex-grow: 1; height: 15px; background-color: #EAE0D1; border-radius: 10px; overflow: hidden; margin: 0 20px; }
+        .progress-bar-inner { width: 0%; height: 100%; background-color: #82C0A4; border-radius: 10px; transition: width 0.5s ease; }
+        .question-image-container { width: 100%; max-width: 450px; margin: 0 auto 20px auto; border-radius: 16px; overflow: hidden; border: 4px solid #EAE0D1; }
+        .question-image { width: 100%; height: auto; display: block; }
+        .question-text { font-size: 28px; font-weight: 500; margin-bottom: 30px; min-height: 70px; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .option-btn { width: 100%; padding: 15px; font-size: 22px; background-color: #F7F2E9; border: 2px solid #EAE0D1; border-radius: 12px; cursor: pointer; transition: all 0.2s ease-in-out; text-align: left; line-height: 1.5; display: flex; align-items: center; box-sizing: border-box; }
+        .option-btn:hover { background-color: #EAE0D1; transform: scale(1.02); }
+        .option-image { width: 60px; height: 60px; border-radius: 8px; margin-right: 15px; object-fit: cover; flex-shrink: 0; }
+        .option-text { flex-grow: 1; }
+        
+        /* --- 屬性選擇頁 --- */
+        .attribute-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; margin-top: 20px; }
+        .attribute-btn { background-color: #F7F2E9; border: 2px solid #EAE0D1; border-radius: 12px; padding: 15px; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .attribute-btn:hover { background-color: #EAE0D1; transform: scale(1.05); }
+        .attribute-icon { width: 50px; height: 50px; }
+        .attribute-name { font-size: 18px; margin-top: 5px; }
+
+        /* --- 資訊輸入頁 --- */
+        .input-section { margin: 30px 0; }
+        .input-field { font-family: 'BiauKai TC', serif; width: 80%; max-width: 400px; padding: 15px; font-size: 20px; border: 2px solid #EAE0D1; border-radius: 10px; margin-top: 10px; }
+        .upload-label { display: inline-block; padding: 12px 20px; background-color: #FAD02E; color: #3D2B1F; border-radius: 10px; cursor: pointer; margin-top: 10px; }
+        .prompt-container { background-color: #f0f0f0; padding: 15px; border-radius: 8px; text-align: left; margin-top: 10px; font-family: monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px; }
+        
+        /* --- 身分證頁面 --- */
+        #id-card-wrapper {
+            width: 100%;
+            max-width: 372px; /* 744px @ 0.5 scale for preview */
+            margin: 20px auto;
+            border: 2px dashed #ccc;
+            padding: 10px;
+        }
+        #id-card-canvas {
+            width: 100%;
+            height: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <!-- 歡迎頁 -->
+        <div id="welcome-screen" class="screen active">
+            <h1>心靈屬性超能力測驗</h1>
+            <p>你好，勇敢的探險家！<br>準備好發現你內心深處隱藏的屬性與力量了嗎？<br>請放輕鬆，跟隨你的第一直覺回答問題吧！</p>
+            <button id="start-btn" class="btn">開始冒險！</button>
+        </div>
+
+        <!-- 屬性測驗頁 -->
+        <div id="quiz1-screen" class="screen">
+            <div class="quiz-header">
+                <button id="back-btn-1" class="back-btn">回到上一題</button>
+                <div class="progress-bar"><div id="progress-bar-inner-1" class="progress-bar-inner"></div></div>
+            </div>
+            <div class="question-image-container"><img id="question-image-1" src="" alt="問題圖解" class="question-image"></div>
+            <h2 id="question-text-1" class="question-text"></h2>
+            <div id="options-grid-1" class="options-grid"></div>
+        </div>
+
+        <!-- 屬性選擇頁 -->
+        <div id="attribute-choice-screen" class="screen">
+            <h2 id="recommendation-text"></h2>
+            <p>你可以接受系統的推薦，或是遵循自己的內心，選擇你最喜歡的屬性！</p>
+            <button id="accept-recommendation-btn" class="btn">接受推薦！</button>
+            <button id="choose-myself-btn" class="btn btn-secondary">我要自己選！</button>
+            <div id="attribute-selection-grid" class="attribute-grid" style="display:none;"></div>
+        </div>
+
+        <!-- 招式測驗頁 -->
+        <div id="quiz2-screen" class="screen">
+            <div class="quiz-header">
+                <button id="back-btn-2" class="back-btn">回到上一題</button>
+                <div class="progress-bar"><div id="progress-bar-inner-2" class="progress-bar-inner"></div></div>
+            </div>
+            <div class="question-image-container"><img id="question-image-2" src="" alt="問題圖解" class="question-image"></div>
+            <h2 id="question-text-2" class="question-text"></h2>
+            <div id="options-grid-2" class="options-grid"></div>
+        </div>
+        
+        <!-- 資訊輸入頁 -->
+        <div id="input-info-screen" class="screen">
+            <h2>打造你的專屬身分證！</h2>
+            <div class="input-section">
+                <label for="name-input"><h3>請簽上你的大名 (暱稱)</h3></label>
+                <input type="text" id="name-input" class="input-field" placeholder="例：小明">
+            </div>
+            <div class="input-section">
+                <label for="account-input"><h3>記下你的專屬帳號</h3></label>
+                <input type="text" id="account-input" class="input-field" placeholder="例：ming123">
+            </div>
+             <div class="input-section">
+                <h3>上傳你的專屬夥伴圖片</h3>
+                <p>你可以使用我們為你準備的預設夥伴，或上傳自己的圖片！</p>
+                <label class="upload-label" for="image-upload">選擇圖片</label>
+                <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                <p>或者，試試看用下面的 AI 咒語，自己創造一隻！<br><small>(這段咒語是根據你的測驗結果生成的喔！)</small></p>
+                <div id="prompt-container" class="prompt-container"></div>
+            </div>
+            <button id="generate-card-btn" class="btn">生成我的身分證！</button>
+        </div>
+
+        <!-- 身分證結果頁 -->
+        <div id="id-card-screen" class="screen">
+            <h2>你的心靈屬性身分證</h2>
+            <p>恭喜你，這就是專屬於你的證明！</p>
+            <div id="id-card-wrapper">
+                <canvas id="id-card-canvas" width="744" height="1038"></canvas>
+            </div>
+            <button id="download-card-btn" class="btn">下載身分證</button>
+            <button id="restart-btn" class="btn btn-secondary">重新測驗一次</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 網站的大腦 (JavaScript) ---
+
+        // =================================================================
+        // --- 1. 內容資料庫 ---
+        // =================================================================
+        
+        const attributes = { 
+            fire: { name: '火', icon: 'https://i.postimg.cc/qRBy0zbV/FIRE.png' }, 
+            water: { name: '水', icon: 'https://i.postimg.cc/W39r4TCj/WATER.png' },
+            electric: { name: '電', icon: 'https://i.postimg.cc/26Hv5rMr/THUNDER.png' }, 
+            grass: { name: '草', icon: 'https://i.postimg.cc/1tRwPfC1/GRASS.png' },
+            dark: { name: '惡', icon: 'https://i.postimg.cc/B6ZHsXYW/DARK.png' }, 
+            psychic: { name: '超', icon: 'https://i.postimg.cc/85kMDjKk/PSYCHIC.png' },
+            steel: { name: '鋼', icon: 'https://i.postimg.cc/26jhmVc5/STEEL.png' }, 
+            fight: { name: '鬥', icon: 'https://i.postimg.cc/76P0DfBF/FIGHTING.png' },
+            normal: { name: '一般', icon: 'https://i.postimg.cc/DZfLF8j7/NORMAL.png' },
+            dragon: { name: '龍', icon: 'https://i.postimg.cc/Z52TFRvq/Dragon.png' } 
+        };
+        
+        const attributeBackgrounds = {
+            fire: 'https://i.postimg.cc/c4RjkznH/fire.png',
+            water: 'https://i.postimg.cc/dVnfwTnt/water.png',
+            electric: 'https://i.postimg.cc/W1SyTJST/thunder.png',
+            grass: 'https://i.postimg.cc/W1syB7Gn/grass.png',
+            dark: 'https://i.postimg.cc/9FdSgk70/dark.png',
+            psychic: 'https://i.postimg.cc/bwq57RxK/psychic.png',
+            steel: 'https://i.postimg.cc/Dw7N9cr9/steel.png',
+            fight: 'https://i.postimg.cc/4N6M209x/fighting.png',
+            normal: 'https://i.postimg.cc/x19ZwPvs/normal.png',
+            dragon: 'https://i.postimg.cc/4N6M209N/dragon.png'
+        };
+
+        const quiz1Questions = [
+            { question: "期待已久的下課時間！鐘聲一響，你通常會做什麼？", image: "https://placehold.co/450x250/A0D2DB/3D2B1F?text=下課時間", options: [ { text: "立刻衝出教室，找朋友玩刺激的鬼抓人或躲避球。", image: "https://placehold.co/100/E48B89/FFF?text=玩樂" }, { text: "和三五好友聚在角落，聊聊昨天看的卡通或是最近的趣事。", image: "https://placehold.co/100/FAD02E/FFF?text=聊天" }, { text: "拿出還沒看完的漫畫或故事書，享受一個人的安靜時光。", image: "https://placehold.co/100/82C0A4/FFF?text=閱讀" }, { text: "拿出筆記本，開始研究上一堂課老師教的有趣問題。", image: "https://placehold.co/100/77AADD/FFF?text=研究" } ], scores: [{ fire: 1, fight: 1 }, { normal: 1, water: 1 }, { psychic: 1, dark: 1 }, { steel: 1, grass: 1 }] },
+            { question: "美術課上，老師要大家以「我的夢想」為主題自由創作，你會？", image: "https://placehold.co/450x250/BF9ACA/3D2B1F?text=美術課", options: [ { text: "畫一幅充滿奇幻色彩、別人可能都想不到的畫。", image: "https://placehold.co/100/E48B89/FFF?text=奇幻" }, { text: "嘗試用一種全新的、大膽的配色或畫法，讓作品看起來最酷。", image: "https://placehold.co/100/FAD02E/FFF?text=獨特" }, { text: "畫出和朋友、家人一起快樂生活的溫馨場景。", image: "https://placehold.co/100/82C0A4/FFF?text=溫馨" }, { text: "精心構圖，把每一個細節都畫得整整齊齊、乾乾淨淨。", image: "https://placehold.co/100/77AADD/FFF?text=整齊" } ], scores: [{ dragon: 1, psychic: 1 }, { electric: 1, dark: 1 }, { water: 1, normal: 1 }, { steel: 1, grass: 1 }] },
+            { question: "你在路上撿到一個看起來很酷的、從沒見過的零件，你會怎麼做？", image: "https://placehold.co/450x250/F0A88D/3D2B1F?text=神秘零件", options: [ { text: "好奇心大爆發！立刻把它帶回家，想辦法拆開來研究。", image: "https://placehold.co/100/E48B89/FFF?text=研究" }, { text: "覺得它很特別，先默默收起來，當作自己的秘密寶藏。", image: "https://placehold.co/100/FAD02E/FFF?text=收藏" }, { text: "拿去問班上的同學或老師，看看有沒有人知道這是什麼。", image: "https://placehold.co/100/82C0A4/FFF?text=詢問" }, { text: "覺得它可能有主人，先把它送到學校的失物招領處。", image: "https://placehold.co/100/77AADD/FFF?text=送交" } ], scores: [{ electric: 1, fire: 1 }, { dragon: 1, dark: 1 }, { normal: 1, fight: 1 }, { grass: 1, water: 1 }] },
+            { question: "班上要舉辦同樂會，需要大家幫忙準備，你會選擇哪項任務？", image: "https://placehold.co/450x250/A0D2DB/3D2B1F?text=同樂會", options: [ { text: "擔任主持人！帶動全場氣氛，讓每個人都嗨起來。", image: "https://placehold.co/100/E48B89/FFF?text=主持" }, { text: "負責策劃遊戲環節，想出一些刺激又好玩的競賽活動。", image: "https://placehold.co/100/FAD02E/FFF?text=策劃" }, { text: "幫忙布置場地、擺放零食，確保每個角落都整齊漂亮。", image: "https://placehold.co/100/82C0A4/FFF?text=佈置" }, { text: "當個貼心的機動組，哪裡需要幫忙就去哪裡。", image: "https://placehold.co/100/77AADD/FFF?text=幫忙" } ], scores: [{ fire: 1, electric: 1 }, { fight: 1, dark: 1 }, { steel: 1, grass: 1 }, { water: 1, normal: 1 }] },
+            { question: "當你和朋友因為一點小事吵架了，你的內心通常是怎麼想的？", image: "https://placehold.co/450x250/BF9ACA/3D2B1F?text=吵架了", options: [ { text: "主動出擊！直接去找他，把話說開，快速和好。", image: "https://placehold.co/100/E48B89/FFF?text=和好" }, { text: "雖然很難過，但我會先冷靜一下，思考整件事是誰對誰錯。", image: "https://placehold.co/100/FAD02E/FFF?text=思考" }, { text: "心裡會很在意，希望他能快點來找我，我們能像以前一樣好。", image: "https://placehold.co/100/82C0A4/FFF?text=等待" }, { text: "順其自然吧，相信過一陣子，我們自然就會和好了。", image: "https://placehold.co/100/77AADD/FFF?text=順其自然" } ], scores: [{ fire: 1, fight: 1 }, { steel: 1, psychic: 1 }, { water: 1, grass: 1 }, { normal: 1, dragon: 1 }] },
+            { question: "如果你可以擁有一種幻想中的寵物，你會選擇？", image: "https://placehold.co/450x250/F0A88D/3D2B1F?text=幻想寵物", options: [ { text: "一隻威風凜凜、會噴火的龍，能帶你到處飛翔。", image: "https://placehold.co/100/E48B89/FFF?text=龍" }, { text: "一隻聰明絕頂、能聽懂你心裡話的神秘靈狐。", image: "https://placehold.co/100/FAD02E/FFF?text=靈狐" }, { text: "一隻忠心耿耿、體格強壯的戰鬥機械犬。", image: "https://placehold.co/100/82C0A4/FFF?text=機械犬" }, { text: "一隻溫柔可愛、會治癒魔法的森林小鹿。", image: "https://placehold.co/100/77AADD/FFF?text=小鹿" } ], scores: [{ dragon: 1, fire: 1 }, { psychic: 1, dark: 1 }, { fight: 1, steel: 1 }, { grass: 1, water: 1 }] },
+            { question: "週末的家庭作業堆得像山一樣高，你會怎麼開始？", image: "https://placehold.co/450x250/A0D2DB/3D2B1F?text=寫作業", options: [ { text: "先不管三七二十一，從最有挑戰性、最難的科目開始解決！", image: "https://placehold.co/100/E48B89/FFF?text=挑戰" }, { text: "列出一張計畫表，把所有功課按順序排好，再一項一項完成。", image: "https://placehold.co/100/FAD02E/FFF?text=計畫" }, { text: "先從自己最喜歡、最拿手的科目開始，建立信心。", image: "https://placehold.co/100/82C0A4/FFF?text=喜歡的" }, { text: "找來喜歡的音樂或零食，營造一個舒服的環境再開始。", image: "https://placehold.co/100/77AADD/FFF?text=營造氣氛" } ], scores: [{ fight: 1, electric: 1 }, { steel: 1, psychic: 1 }, { fire: 1, normal: 1 }, { water: 1, dragon: 1 }] },
+            { question: "你即將踏上冒險旅程，你會選擇什麼樣的夥伴與你同行？", image: "https://placehold.co/450x250/BF9ACA/3D2B1F?text=冒險夥伴", options: [ { text: "一位充滿勇氣、武藝高強的皇家騎士。", image: "https://placehold.co/100/E48B89/FFF?text=騎士" }, { text: "一位睿智博學、能解讀古代魔法的精靈法師。", image: "https://placehold.co/100/FAD02E/FFF?text=法師" }, { text: "一位活潑開朗、擅長用歌聲鼓舞人心的吟遊詩人。", image: "https://placehold.co/100/82C0A4/FFF?text=詩人" }, { text: "一位神出鬼沒、能悄悄探查敵情的暗影刺客。", image: "https://placehold.co/100/77AADD/FFF?text=刺客" } ], scores: [{ fight: 1, steel: 1 }, { psychic: 1, dragon: 1 }, { normal: 1, fire: 1 }, { dark: 1, electric: 1 }] },
+            { question: "你們在森林深處發現一個古老洞穴，洞口傳來低沉的咆哮聲，你會怎麼做？", image: "https://placehold.co/450x250/F0A88D/3D2B1F?text=古老洞穴", options: [ { text: "熱血沸騰！這肯定是個挑戰，不管三七二十一，第一個衝進去！", image: "https://placehold.co/100/E48B89/FFF?text=衝！" }, { text: "小心至上。先在洞口製造一個魔法屏障保護大家，再慢慢前進。", image: "https://placehold.co/100/FAD02E/FFF?text=防禦" }, { text: "先躲在入口的陰影處，仔細觀察、分析聲音來源和可能的危險。", image: "https://placehold.co/100/82C0A4/FFF?text=觀察" }, { text: "這也許是某個生物的家，先用食物試著安撫牠。", image: "https://placehold.co/100/77AADD/FFF?text=安撫" } ], scores: [{ fire: 1, fight: 1 }, { steel: 1, water: 1 }, { dark: 1, psychic: 1 }, { grass: 1, normal: 1 }] },
+            { question: "成功屠龍後，在牠的寶庫中，你只能選擇一樣寶物。你會拿走什麼？", image: "https://placehold.co/450x250/A0D2DB/3D2B1F?text=龍之寶庫", options: [ { text: "一把削鐵如泥、寄宿著古代戰神力量的傳說之劍。", image: "https://placehold.co/100/E48B89/FFF?text=劍" }, { text: "一個能隨心所欲變出各種新奇有趣工具的魔法口袋。", image: "https://placehold.co/100/FAD02E/FFF?text=口袋" }, { text: "一本記載著所有失落的生命魔法、能讓萬物復甦的古老醫書。", image: "https://placehold.co/100/82C0A4/FFF?text=書" }, { text: "一面能看穿所有謊言與幻術、映照出真實的智慧魔鏡。", image: "https://placehold.co/100/77AADD/FFF?text=鏡" } ], scores: [{ dragon: 1, fight: 1 }, { electric: 1, normal: 1 }, { water: 1, grass: 1 }, { psychic: 1, steel: 1 }] },
+            { question: "在旅途的終點，一位神秘的守護者擋住去路並提問，你會展現什麼？", image: "https://placehold.co/450x250/BF9ACA/3D2B1F?text=守護者", options: [ { text: "展現你百折不撓的「意志」與壓倒性的「力量」。", image: "https://placehold.co/100/E48B89/FFF?text=意志" }, { text: "展現你天馬行空的「創意」與打破常規的「奇謀」。", image: "https://placehold.co/100/FAD02E/FFF?text=創意" }, { text: "展現你關懷萬物的「慈悲」與隨機應變的「溫柔」。", image: "https://placehold.co/100/82C0A4/FFF?text=慈悲" }, { text: "展現你堅定不移的「信念」與沉著冷靜的「智慧」。", image: "https://placehold.co/100/77AADD/FFF?text=信念" } ], scores: [{ fire: 1, fight: 1 }, { electric: 1, dark: 1 }, { water: 1, normal: 1 }, { steel: 1, psychic: 1 }] },
+            { question: "面對最終大魔王，需要有夥伴擔任誘餌，在危急關頭，你會？", image: "https://placehold.co/450x250/F0A88D/3D2B1F?text=最終決戰", options: [ { text: "當仁不讓！由我來吸引魔王注意，為隊友製造攻擊機會！", image: "https://placehold.co/100/E48B89/FFF?text=我來！" }, { text: "提出一個絕妙的聲東擊西計畫，用陷阱或魔法創造「假的誘餌」。", image: "https://placehold.co/100/FAD02E/FFF?text=計畫" }, { text: "相信夥伴的羈絆，我們不需要誘餌，也能找到合作無間的攻擊方式。", image: "https://placehold.co/100/82C0A4/FFF?text=合作" }, { text: "默默地吟唱咒語，準備在夥伴最危險時，施展最強的治癒或防禦術。", image: "https://placehold.co/100/77AADD/FFF?text=支援" } ], scores: [{ fire: 1, dragon: 1 }, { dark: 1, electric: 1 }, { fight: 1, normal: 1 }, { water: 1, grass: 1 }] }
+        ];
+        const quiz2Questions = [
+            { question: "當古老的王國發出召集令，尋找能討伐災厄的英雄時，你是為了什麼而響應？", image: "https://placehold.co/450x250/A0D2DB/3D2B1F?text=響應召集", options: [ { text: "為了在戰鬥中尋求最強的榮耀，證明我的力量。", image: "https://placehold.co/100/E48B89/FFF?text=A" }, { text: "為了守護我的家園與無辜的人民，這是我的責任。", image: "https://placehold.co/100/82C0A4/FFF?text=B" }, { text: "這場災厄的背後必有蹊蹺，我要找出事件的真相。", image: "https://placehold.co/100/FAD02E/FFF?text=C" }, { text: "這是一場前所未有的挑戰，能讓我的戰鬥技藝更加精進。", image: "https://placehold.co/100/77AADD/FFF?text=D" }, { text: "這是能一戰成名、讓我的名字被載入史詩的最好機會。", image: "https://placehold.co/100/BF9ACA/FFF?text=E" }, { text: "我的夥伴們都決定前往，我必須與他們並肩作戰，互相扶持。", image: "https://placehold.co/100/F0A88D/FFF?text=F" } ] },
+            { question: "你走到一處魔法森林的十字路口，六條小徑通往不同的試煉，你會選擇哪一條？", image: "https://placehold.co/450x250/BF9ACA/3D2B1F?text=選擇道路", options: [ { text: "「力量之道」：與棲息於此的巨大魔像進行正面的力量對決。", image: "https://placehold.co/100/E48B89/FFF?text=A" }, { text: "「守護之道」：在一波又一波的魔物攻擊下，保護一顆神聖的古樹。", image: "https://placehold.co/100/82C0A4/FFF?text=B" }, { text: "「智慧之道」：深入充滿機關的古代迷宮，解開其中的謎題與陷阱。", image: "https://placehold.co/100/FAD02E/FFF?text=C" }, { text: "「敏捷之道」：在飛速射來的魔法箭雨中穿梭，並奪取末端的寶石。", image: "https://placehold.co/100/77AADD/FFF?text=D" }, { text: "「勇者之道」：直接挑戰傳說中盤踞在森林中央的惡龍。", image: "https://placehold.co/100/BF9ACA/FFF?text=E" }, { text: "「羈絆之道」：幫助失散的森林精靈們重新團結，凝聚他們的力量。", image: "https://placehold.co/100/F0A88D/FFF?text=F" } ] },
+            { question: "一位傳說中的鐵匠願意為你打造一件神器，你最希望它擁有什麼特性？", image: "https://placehold.co/450x250/F0A88D/3D2B1F?text=打造神器", options: [ { text: "擁有無堅不摧的特性，能夠擊碎一切阻礙。", image: "https://placehold.co/100/E48B89/FFF?text=A" }, { text: "擁有自我修復的特性，能在戰鬥中永遠保護著我。", image: "https://placehold.co/100/82C0A4/FFF?text=B" }, { text: "擁有迷惑敵人的特性，讓對手無法預測我的下一步。", image: "https://placehold.co/100/FAD02E/FFF?text=C" }, { text: "擁有風之祝福的特性，讓我的動作變得像風一樣快。", image: "https://placehold.co/100/77AADD/FFF?text=D" }, { text: "擁有儲存能量的特性，能在關鍵時刻釋放致命一擊。", image: "https://placehold.co/100/BF9ACA/FFF?text=E" }, { text: "擁有與隊友共鳴的特性，能提升整個團隊的力量。", image: "https://placehold.co/100/F0A88D/FFF?text=F" } ] },
+            { question: "你面對一個極度狡猾、擅長使用幻術的敵人，你的戰術是？", image: "https://placehold.co/450x250/A0D2DB/3D2B1F?text=對抗幻術", options: [ { text: "用範圍最廣的攻擊，無差別地摧毀所有可能的幻象和敵人本體。", image: "https://placehold.co/100/E48B89/FFF?text=A" }, { text: "聚集在隊友身邊，組成穩固的防禦陣型，不給敵人任何可趁之機。", image: "https://placehold.co/100/82C0A4/FFF?text=B" }, { text: "故意露出破綻，引誘敵人攻擊，並在他現身的瞬間發動準備已久的陷阱。", image: "https://placehold.co/100/FAD02E/FFF?text=C" }, { text: "憑藉我敏銳的直覺和速度，在無數幻象中快速移動，找出敵人的真身。", image: "https://placehold.co/100/77AADD/FFF?text=D" }, { text: "無視所有干擾，集中全部精神，等待敵人鬆懈的那一刻再發動最強攻擊。", image: "https://placehold.co/100/BF9ACA/FFF?text=E" }, { text: "用堅定的信念鼓舞隊友，讓大家的心靈連結在一起，共同抵抗幻術。", image: "https://placehold.co/100/F0A88D/FFF?text=F" } ] },
+            { question: "戰鬥勝利後，國王決定賜予你最高的獎勵，你會選擇什麼？", image: "https://placehold.co/450x250/BF9ACA/3D2B1F?text=國王的獎勵", options: [ { text: "一瓶能永久提升力量的「巨人魔藥」。", image: "https://placehold.co/100/E48B89/FFF?text=A" }, { text: "一筆足以重建被毀壞村莊的巨額財富。", image: "https://placehold.co/100/82C0A4/FFF?text=B" }, { text: "進入不對外開放的皇家圖書館，閱讀所有關於這個世界秘密的古書。", image: "https://placehold.co/100/FAD02E/FFF?text=C" }, { text: "一位傳說中的劍術大師親自傳授你失傳已久的戰鬥技巧。", image: "https://placehold.co/100/77AADD/FFF?text=D" }, { text: "由國王親自授予，代表王國最強實力的「榮譽大十字勳章」。", image: "https://placehold.co/100/BF9ACA/FFF?text=E" }, { text: "與一路奮戰至今的夥伴們，一同舉辦一場最盛大、最歡樂的慶功宴會。", image: "https://placehold.co/100/F0A88D/FFF?text=F" } ] }
+        ];
+
+        const styleNames = { A: '強攻風格', B: '守護風格', C: '計謀風格', D: '迅捷風格', E: '王牌風格', F: '心靈風格' };
+        const resultsData = {
+            fire: { mascot: "https://placehold.co/300/FF6347/FFFFFF?text=火精靈", traitShort: "熱情、勇敢的火焰，天生的領導者！", moves: { A: { name: "噴射火焰", descShort: "將熱情化為純粹火焰，正面迎擊困難！" }, B: { name: "神聖之火", descShort: "召喚淨化一切的聖火，守護重要夥伴。" }, C: { name: "鬼火", descShort: "製造藍色靈火擾亂對手，創造致勝先機。" }, D: { name: "火焰輪", descShort: "化為高速旋轉的火焰輪，迅雷般衝鋒。" }, E: { name: "大字爆炎", descShort: "釋放全部能量，劃出巨大的火焰王牌。" }, F: { name: "火焰之舞", descShort: "跳起熱情的戰舞，鼓舞所有夥伴的士氣。" } } },
+            water: { mascot: "https://placehold.co/300/1E90FF/FFFFFF?text=水精靈", traitShort: "冷靜且智慧的內心，是團隊可靠的智囊。", moves: { A: { name: "水炮", descShort: "將水的力量高度壓縮，發射出驚人威力！" }, B: { name: "衝浪", descShort: "製造巨大的浪潮，承載夥伴越過障礙。" }, C: { name: "潮旋", descShort: "製造無法逃脫的漩渦，用智慧解決難題。" }, D: { name: "流水旋舞", descShort: "動作如水般流暢，大幅提升自己的靈活度。" }, E: { name: "根源波動", descShort: "引動生命之源的古老力量，席捲一切。" }, F: { name: "攀瀑", descShort: "擁有不屈不撓的精神，帶領夥伴逆流而上。" } } },
+            electric: { mascot: "https://placehold.co/300/FFD700/FFFFFF?text=電精靈", traitShort: "思緒如電流般迅捷，是團隊的創意核心。", moves: { A: { name: "十萬伏特", descShort: "凝聚創意與能量，釋放強大穩定的電流。" }, B: { name: "電磁飄浮", descShort: "利用電磁力飄浮，用智慧化解地面危機。" }, C: { name: "伏特替換", descShort: "攻擊後迅速返回，是高超的戰術運用。" }, D: { name: "瘋狂伏特", descShort: "將全身化為電流猛撞，展現突破的勇氣。" }, E: { name: "電磁炮", descShort: "將所有靈感壓縮到極限，發射必殺一擊。" }, F: { name: "放電", descShort: "釋放溫和的電流，活化夥伴們的精神。" } } },
+            grass: { mascot: "https://placehold.co/300/32CD32/FFFFFF?text=草精靈", traitShort: "沉穩有耐心，像大樹般值得夥伴信賴。", moves: { A: { name: "強力鞭打", descShort: "溫和外表下，隱藏著守護夥伴的強大力量。" }, B: { name: "尖刺防守", descShort: "讓全身長滿尖刺，完美防禦並反擊敵人。" }, C: { name: "寄生種子", descShort: "在難題中植入希望，將困難轉化為養分。" }, D: { name: "飛葉快刀", descShort: "射出鋒利的葉片，精準快速地切斷麻煩。" }, E: { name: "日光束", descShort: "耐心儲存能量，只為在關鍵時綻放光芒。" }, F: { name: "光合作用", descShort: "擁有自我療癒的內心，吸收能量重新出發。" } } },
+            dark: { mascot: "https://placehold.co/300/4B0082/FFFFFF?text=惡精靈", traitShort: "特立獨行，能輕易看穿事物本質。", moves: { A: { name: "咬碎", descShort: "一旦下定決心，就用最直接的力量粉碎障礙。" }, B: { name: "地獄突刺", descShort: "用突刺直擊問題根源，為夥伴創造安靜。" }, C: { name: "拋下狠話", descShort: "擅長心理戰，用話語打擊對手信心再行動。" }, D: { name: "出奇一擊", descShort: "抓住對手鬆懈的瞬間，從陰影中發動突襲。" }, E: { name: "暗黑爆破", descShort: "凝聚神秘的黑暗能量，釋放輕易不示人的王牌。" }, F: { name: "詭計", descShort: "靜靜地思考，活化大腦想出更厲害的計畫。" } } },
+            psychic: { mascot: "https://placehold.co/300/EE82EE/FFFFFF?text=超精靈", traitShort: "內心像星空般深邃，能預見未來的發展。", moves: { A: { name: "精神強念", descShort: "凝聚強大的精神力，直接攻擊問題的核心。" }, B: { name: "魔法反射", descShort: "製造神奇的能量鏡，將所有負面效果反彈。" }, C: { name: "戲法空間", descShort: "創造顛覆規則的空間，讓「慢」變成「快」。" }, D: { name: "精神利刃", descShort: "將意念化為高速利刃，展現精準的判斷力。" }, E: { name: "預知未來", descShort: "將力量送到未來，發動無可防禦的攻擊。" }, F: { name: "冥想", descShort: "沉澱內心，讓精神力量與智慧大幅提升。" } } },
+            steel: { mascot: "https://placehold.co/300/C0C0C0/FFFFFF?text=鋼精靈", traitShort: "擁有鋼鐵般的意志，是夥伴最堅實的後盾。", moves: { A: { name: "鐵頭", descShort: "用堅硬的意志，毫不猶豫地撞向眼前的困難。" }, B: { name: "鐵壁", descShort: "化身鋼鐵城牆，為夥伴提供極致的安全感。" }, C: { name: "鐵蹄光線", descShort: "為達目標，不惜代價發射強大的毀滅光線。" }, D: { name: "子彈拳", descShort: "拳速快如子彈，總能在第一時間解決麻煩。" }, E: { name: "巨獸斬", descShort: "揮出傳說中的斬擊，切開一切事物的本質。" }, F: { name: "加農光炮", descShort: "將堅定信念化為光炮，照亮前路鼓舞夥伴。" } } },
+            fight: { mascot: "https://placehold.co/300/A52A2A/FFFFFF?text=鬥精靈", traitShort: "充滿正義感，享受通過努力戰勝困難。", moves: { A: { name: "近身戰", descShort: "放棄所有防守，用暴風驟雨般的攻擊壓制對手。" }, B: { name: "雙倍奉還", descShort: "挺身承受攻擊，再將力量加倍奉還給對方！" }, C: { name: "增強拳", descShort: "在實戰中愈戰愈勇，讓自己的拳頭越來越強。" }, D: { name: "音速拳", descShort: "拳頭超越音速，搶在危險發生前保護夥伴。" }, E: { name: "真氣拳", descShort: "集中全部的「氣」，打出石破天驚的一拳。" }, F: { name: "波導彈", descShort: "發射追蹤心靈的能量彈，直接命中事物本質。" } } },
+            normal: { mascot: "https://placehold.co/300/F5F5DC/3D2B1F?text=一般精靈", traitShort: "潛力無限，是能在各種場合發揮作用的萬變之星。", moves: { A: { name: "捨身衝撞", descShort: "為了達成目標，使出奮不顧身的全力衝撞。" }, B: { name: "自我再生", descShort: "無論多大挫折，都能快速治癒自己重新振作。" }, C: { name: "替身", descShort: "製造替身承受傷害，換取思考下一步的機會。" }, D: { name: "神速", descShort: "在關鍵時刻，能以肉眼無法捕捉的速度行動。" }, E: { name: "破壞光線", descShort: "解放體內最純粹的能量，發射毀滅性的光束。" }, F: { name: "三重攻擊", descShort: "同時發射三種不同光線，是多才多藝的證明。" } } },
+            dragon: { mascot: "https://placehold.co/300/483D8B/FFFFFF?text=龍精靈", traitShort: "與生俱來的驕傲與自信，擁有王者的風範。", moves: { A: { name: "龍爪", descShort: "驕傲化為鋒利的龍爪，撕裂一切質疑與阻礙。" }, B: { name: "龍聲鼓舞", descShort: "發出龍的吼聲，激勵夥伴，提升團隊的潛能。" }, C: { name: "逆鱗", descShort: "一旦被觸碰底線，就會爆發毀滅性的力量。" }, D: { name: "龍之波動", descShort: "將龍之力轉化為高速衝擊波，完美駕馭力量。" }, E: { name: "流星群", descShort: "呼喚來自天外的力量，召喚無數隕石攻擊。" }, F: { name: "龍之舞", descShort: "跳起太古之舞，喚醒血脈中最原始的力量。" } } }
+        };
+        const keywordDatabase = {
+            baseCreatures: ["小狐狸", "迷你龍", "水晶獸", "貓咪騎士", "石頭守衛", "火焰鳥", "森林精靈", "機械犬", "幽靈寶寶", "光之蝶", "迷你格里芬", "小樹人", "閃電鼠", "水滴魚"],
+            attributes: {
+                fire: ["燃燒的", "火焰圖案的", "溫暖色調的"], water: ["水流般的", "半透明的", "冒著氣泡的"], electric: ["帶電的", "尖銳稜角的", "閃電符號的"], grass: ["長著葉子的", "藤蔓纏繞的", "森林氣息的"], dark: ["陰影構成的", "銳利眼神的", "深色系的"], psychic: ["漂浮在空中的", "身上有水晶的", "散發靈氣的"], steel: ["覆蓋著金屬盔甲的", "有鋒利刀刃的", "機械結構的"], fight: ["肌肉發達的", "綁著繃帶的", "表情堅毅的"], normal: ["毛茸茸的", "友善的", "樸實的"], dragon: ["覆蓋著龍鱗的", "有巨大翅膀的", "威嚴的"]
+            },
+            styles: {
+                A: ["巨大的爪子", "強壯的臂膀", "表情兇猛的"], B: ["寬闊的背甲", "拿著巨大的盾牌", "溫柔眼神的"], C: ["狡黠微笑的", "戴著面具的", "隱藏在斗篷裡的"], D: ["輕盈翅膀的", "流線型身體的", "準備奔跑姿態的"], E: ["散發強大氣場的", "身上有王者印記的", "眼神自信的"], F: ["身上有發光符文的", "閉著眼睛冥想的", "鼓舞人心的"]
+            },
+            moves: {
+                "噴射火焰": "正在噴出直線的火焰", "神聖之火": "身上環繞著純白的火焰", "鬼火": "身邊漂浮著藍色的靈火", "火焰輪": "身體高速旋轉並纏繞著火焰", "大字爆炎": "正在描繪巨大的火焰文字", "火焰之舞": "正在跳著優雅的火焰之舞",
+                "水炮": "正在噴出強力的高壓水柱", "衝浪": "駕馭著巨大的浪潮", "潮旋": "身邊形成一個水流漩渦", "流水旋舞": "正在進行流暢優雅的旋轉", "根源波動": "正在釋放原始的衝擊波能量", "攀瀑": "展現出逆流而上的姿態",
+                "十萬伏特": "正在釋放強力的電擊", "電磁飄浮": "利用電磁力漂浮在空中", "伏特替換": "攻擊後化為電流返回", "瘋狂伏特": "全身纏繞著電流猛撞", "電磁炮": "正在發射巨大的電漿炮", "放電": "向周圍散發出溫和的電流",
+                "強力鞭打": "正在揮舞著堅韌的藤蔓", "尖刺防守": "全身長出了尖刺進行防禦", "寄生種子": "正在發射一顆神秘的種子", "飛葉快刀": "正在射出像刀刃一樣的葉片", "日光束": "正在匯集太陽的能量", "光合作用": "正在吸收陽光治癒自己",
+                "咬碎": "正在用巨大的力量進行啃咬", "地獄突刺": "用迅猛的突刺攻擊弱點", "拋下狠話": "用言語威嚇對手", "出奇一擊": "正從陰影中發動突襲", "暗黑爆破": "正在凝聚一股黑暗的能量球", "詭計": "眼神變得非常銳利，正在思考",
+                "精神強念": "眼睛發光，正在使用念力", "魔法反射": "身前出現一面能量鏡", "戲法空間": "周圍的空間開始扭曲", "精神利刃": "手中凝聚出精神力的刀刃", "預知未來": "眼中閃爍著未來的景象", "冥想": "閉著眼睛，身體發出淡淡的光芒",
+                "鐵頭": "頭部變成了金屬，準備衝撞", "鐵壁": "身體變成了堅不可摧的鋼鐵", "鐵蹄光線": "正在發射毀滅性的光線", "子彈拳": "打出快如子彈的拳頭", "巨獸斬": "揮舞著傳說中的巨大劍刃", "加農光炮": "正在發射一道璀璨的光炮",
+                "近身戰": "正在發動暴風驟雨般的攻擊", "雙倍奉還": "身上散發出反擊的氣場", "增強拳": "拳頭上聚集著越來越強的力量", "音速拳": "打出了超越音速的一拳", "真氣拳": "正在集中全部精神準備攻擊", "波導彈": "正在發射一顆追蹤的能量彈",
+                "捨身衝撞": "正在進行奮不顧身的全力衝撞", "自我再生": "傷口正在快速地自我癒合", "替身": "正在創造一個自己的替身", "神速": "以肉眼看不見的速度移動", "破壞光線": "正在發射一道毀滅性的光束", "三重攻擊": "同時發射三種不同顏色的光線",
+                "龍爪": "爪子變得異常鋒利，閃著寒光", "龍聲鼓舞": "正在發出振奮人心的吼叫", "逆鱗": "眼睛變紅，陷入狂暴狀態", "龍之波動": "正在釋放一道強力的衝擊波", "流星群": "正在吟唱咒語，召喚隕石", "龍之舞": "正在跳著充滿力量的古代舞蹈"
+            }
+        };
+
+        // =================================================================
+        // --- 2. 狀態變數 ---
+        // =================================================================
+        let currentQuiz1Index = 0;
+        let attributeScores = {};
+        let quiz1History = [];
+        
+        let currentQuiz2Index = 0;
+        let styleScores = {};
+        let quiz2History = [];
+
+        let recommendedAttribute = '';
+        let finalAttribute = '';
+        let finalStyle = '';
+        let userUploadedImage = null;
+
+        // =================================================================
+        // --- 3. DOM 元素 ---
+        // =================================================================
+        const allScreens = document.querySelectorAll('.screen');
+        const startBtn = document.getElementById('start-btn');
+        const backBtn1 = document.getElementById('back-btn-1');
+        const progressBar1 = document.getElementById('progress-bar-inner-1');
+        const questionImage1 = document.getElementById('question-image-1');
+        const questionText1 = document.getElementById('question-text-1');
+        const optionsGrid1 = document.getElementById('options-grid-1');
+        const recommendationText = document.getElementById('recommendation-text');
+        const acceptRecommendationBtn = document.getElementById('accept-recommendation-btn');
+        const chooseMyselfBtn = document.getElementById('choose-myself-btn');
+        const attributeSelectionGrid = document.getElementById('attribute-selection-grid');
+        const backBtn2 = document.getElementById('back-btn-2');
+        const progressBar2 = document.getElementById('progress-bar-inner-2');
+        const questionImage2 = document.getElementById('question-image-2');
+        const questionText2 = document.getElementById('question-text-2');
+        const optionsGrid2 = document.getElementById('options-grid-2');
+        const nameInput = document.getElementById('name-input');
+        const accountInput = document.getElementById('account-input');
+        const imageUpload = document.getElementById('image-upload');
+        const promptContainer = document.getElementById('prompt-container');
+        const generateCardBtn = document.getElementById('generate-card-btn');
+        const idCardCanvas = document.getElementById('id-card-canvas');
+        const downloadCardBtn = document.getElementById('download-card-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // =================================================================
+        // --- 4. 核心功能函式 ---
+        // =================================================================
+
+        function showScreen(screenId) {
+            allScreens.forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        
+        function createOptionButton(option, onclickAction) {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.onclick = onclickAction;
+            const img = document.createElement('img');
+            img.src = option.image;
+            img.alt = option.text.substring(0, 10);
+            img.className = 'option-image';
+            const span = document.createElement('span');
+            span.className = 'option-text';
+            span.innerText = option.text;
+            button.appendChild(img);
+            button.appendChild(span);
+            return button;
+        }
+
+        function startQuiz1() {
+            currentQuiz1Index = 0;
+            attributeScores = { fire:0, water:0, electric:0, grass:0, dark:0, psychic:0, steel:0, fight:0, normal:0, dragon:0 };
+            quiz1History = [];
+            userUploadedImage = null;
+            nameInput.value = '';
+            accountInput.value = '';
+            imageUpload.value = '';
+            showScreen('quiz1-screen');
+            displayQuiz1Question();
+        }
+
+        function displayQuiz1Question() {
+            backBtn1.classList.toggle('visible', currentQuiz1Index > 0);
+            if (currentQuiz1Index >= quiz1Questions.length) {
+                showAttributeChoice();
+                return;
+            }
+            const progress = ((currentQuiz1Index) / quiz1Questions.length) * 100;
+            progressBar1.style.width = `${progress}%`;
+            const q = quiz1Questions[currentQuiz1Index];
+            questionImage1.src = q.image;
+            questionText1.innerText = q.question;
+            optionsGrid1.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const button = createOptionButton(opt, () => selectQuiz1Answer(index));
+                optionsGrid1.appendChild(button);
+            });
+        }
+
+        function selectQuiz1Answer(index) {
+            const scores = quiz1Questions[currentQuiz1Index].scores[index];
+            quiz1History.push(scores);
+            for (const attr in scores) {
+                if(attributeScores.hasOwnProperty(attr)) {
+                   attributeScores[attr] += scores[attr];
+                }
+            }
+            currentQuiz1Index++;
+            displayQuiz1Question();
+        }
+
+        function goBackQuiz1() {
+            if (quiz1History.length === 0) return;
+            const lastScores = quiz1History.pop();
+            for (const attr in lastScores) {
+                if(attributeScores.hasOwnProperty(attr)) {
+                   attributeScores[attr] -= lastScores[attr];
+                }
+            }
+            currentQuiz1Index--;
+            displayQuiz1Question();
+        }
+
+        function showAttributeChoice() {
+            let maxScore = -1, recommended = '', topScores = [];
+            for (const attr in attributeScores) {
+                if (attributeScores[attr] > maxScore) {
+                    maxScore = attributeScores[attr];
+                    topScores = [attr];
+                } else if (attributeScores[attr] === maxScore) {
+                    topScores.push(attr);
+                }
+            }
+            recommended = topScores[Math.floor(Math.random() * topScores.length)];
+            recommendedAttribute = recommended;
+            const attrData = attributes[recommended];
+            recommendationText.innerHTML = `根據你的回答，系統推薦的屬性是 <br> <img src="${attrData.icon}" alt="${attrData.name}" class="attribute-icon" style="vertical-align: middle; margin-right: 10px;"> ${attrData.name} 屬性！`;
+            attributeSelectionGrid.style.display = 'none';
+            showScreen('attribute-choice-screen');
+        }
+        
+        function acceptRecommendation() {
+            finalAttribute = recommendedAttribute;
+            startQuiz2();
+        }
+
+        function showAttributeGrid() {
+            attributeSelectionGrid.style.display = 'grid';
+            attributeSelectionGrid.innerHTML = '';
+            for(const attrKey in attributes) {
+                const attr = attributes[attrKey];
+                const button = document.createElement('button');
+                button.className = 'attribute-btn';
+                button.onclick = () => selectFinalAttribute(attrKey);
+                button.innerHTML = `<img src="${attr.icon}" alt="${attr.name}" class="attribute-icon"><div class="attribute-name">${attr.name}</div>`;
+                attributeSelectionGrid.appendChild(button);
+            }
+        }
+        
+        function selectFinalAttribute(attrKey) {
+            finalAttribute = attrKey;
+            startQuiz2();
+        }
+        
+         function startQuiz2() {
+            currentQuiz2Index = 0;
+            styleScores = { A:0, B:0, C:0, D:0, E:0, F:0 };
+            quiz2History = [];
+            showScreen('quiz2-screen');
+            displayQuiz2Question();
+        }
+        
+        function displayQuiz2Question() {
+            backBtn2.classList.toggle('visible', currentQuiz2Index > 0);
+            if (currentQuiz2Index >= quiz2Questions.length) {
+                showInputInfo();
+                return;
+            }
+            const progress = ((currentQuiz2Index) / quiz2Questions.length) * 100;
+            progressBar2.style.width = `${progress}%`;
+            const q = quiz2Questions[currentQuiz2Index];
+            questionImage2.src = q.image;
+            questionText2.innerText = q.question;
+            optionsGrid2.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const style = String.fromCharCode(65 + index);
+                const button = createOptionButton(opt, () => selectQuiz2Answer(style));
+                optionsGrid2.appendChild(button);
+            });
+        }
+        
+        function selectQuiz2Answer(style) {
+            if (styleScores.hasOwnProperty(style)) {
+                quiz2History.push(style);
+                styleScores[style]++;
+            }
+            currentQuiz2Index++;
+            displayQuiz2Question();
+        }
+
+        function goBackQuiz2() {
+            if (quiz2History.length === 0) return;
+            const lastStyle = quiz2History.pop();
+            if (styleScores.hasOwnProperty(lastStyle)) {
+                styleScores[lastStyle]--;
+            }
+            currentQuiz2Index--;
+            displayQuiz2Question();
+        }
+
+        function showInputInfo() {
+            let maxScore = -1, finalStyleArr = [];
+            for (const style in styleScores) {
+                if (styleScores[style] > maxScore) {
+                    maxScore = styleScores[style];
+                    finalStyleArr = [style];
+                } else if (styleScores[style] === maxScore) {
+                    finalStyleArr.push(style);
+                }
+            }
+            finalStyle = finalStyleArr[Math.floor(Math.random() * finalStyleArr.length)];
+            generateAIPrompt();
+            showScreen('input-info-screen');
+        }
+        
+        function generateAIPrompt() {
+            const attrKeywords = keywordDatabase.attributes[finalAttribute];
+            const styleKeywords = keywordDatabase.styles[finalStyle];
+            const baseCreatures = keywordDatabase.baseCreatures;
+            const finalMoveName = resultsData[finalAttribute].moves[finalStyle].name;
+            const moveKeyword = keywordDatabase.moves[finalMoveName] || "正在展現它的力量";
+            
+            if (!attrKeywords || !styleKeywords || !baseCreatures) {
+                promptContainer.innerText = "無法生成咒語，資料庫不完整。";
+                return;
+            }
+
+            const creature = baseCreatures[Math.floor(Math.random() * baseCreatures.length)];
+            const randomAttrKeyword = attrKeywords[Math.floor(Math.random() * attrKeywords.length)];
+            const randomStyleKeyword = styleKeywords[Math.floor(Math.random() * styleKeywords.length)];
+            const description = `一隻${randomAttrKeyword}、${randomStyleKeyword}的「${creature}」，牠${moveKeyword}。`;
+            
+            const prompt = `請立刻根據以下的詳細描述，為我生成一張圖片，不要只回覆文字：\n\n**風格：**「寶可夢 (Pokémon) 美術風格」\n\n**核心主題：** ${description}\n\n**詳細要求：**\n- 日系動畫角色設計\n- 清晰加粗的黑色輪廓線\n- 色彩鮮豔飽滿，賽璐璐風格上色\n- 表情可愛且富有活力\n- 全身，正面圖\n- 角色位於畫面中央\n- 背景為乾淨的純白色\n- 圖片中不能有任何文字或浮水印\n- 圖片為正方形 (1:1 aspect ratio)`;
+            
+            promptContainer.innerText = prompt;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => { userUploadedImage = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        async function generateIdCard() {
+            showScreen('id-card-screen');
+            const canvas = idCardCanvas;
+            const ctx = canvas.getContext('2d');
+            const name = nameInput.value || '探險家';
+            const account = accountInput.value || '未設定';
+            const result = resultsData[finalAttribute];
+            const move = result.moves[finalStyle];
+            
+            try {
+                const bgSrc = attributeBackgrounds[finalAttribute] || attributeBackgrounds['normal'];
+                const bgImg = await loadImage(bgSrc);
+                ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+            } catch (error) {
+                console.error("背景圖片載入失敗:", error);
+                ctx.fillStyle = "#FDF5E6";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            try {
+                const mascotSrc = userUploadedImage || result.mascot;
+                const mascotImg = await loadImage(mascotSrc);
+                ctx.drawImage(mascotImg, 85, 125, 574, 335); 
+            } catch (error) {
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(85, 125, 574, 335);
+                ctx.fillStyle = '#3D2B1F';
+                ctx.font = "30px 'BiauKai TC'";
+                ctx.textAlign = "center";
+                ctx.fillText("圖片載入失敗", canvas.width / 2, 280);
+            }
+
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'left';
+
+            // name
+            ctx.font = "bold 60px 'BiauKai TC'";
+            ctx.fillText(name, 160, 98);
+
+            // ability (戰鬥風格)
+            ctx.font = "bold 42px 'BiauKai TC'";
+            ctx.fillStyle = '#D63031';
+            ctx.fillText(styleNames[finalStyle], 270, 575);
+            
+            // ability explain (屬性特質)
+            ctx.fillStyle = '#000000';
+            ctx.font = "32px 'BiauKai TC'";
+            drawTextWithWrap(ctx, result.traitShort, 100, 620, 570, 40);
+
+            // acount (學生帳號)
+            ctx.font = "bold 52px 'BiauKai TC'";
+            ctx.fillText(account, 270, 715);
+            
+            // attack (招式名稱)
+            ctx.font = "bold 48px 'BiauKai TC'";
+            ctx.fillText(`【${move.name}】`, 270, 785);
+            
+            // attack plain (招式說明)
+            ctx.font = "32px 'BiauKai TC'";
+            drawTextWithWrap(ctx, move.descShort, 100, 830, 570, 40);
+        }
+        
+        function loadImage(src) { return new Promise((resolve, reject) => { const img = new Image(); img.crossOrigin = "Anonymous"; img.onload = () => resolve(img); img.onerror = () => reject(new Error(`Failed to load image: ${src}`)); img.src = src; }); }
+        function drawTextWithWrap(context, text, x, y, maxWidth, lineHeight) { let line = ''; for (let i = 0; i < text.length; i++) { const char = text[i]; const testLine = line + char; const metrics = context.measureText(testLine); if (metrics.width > maxWidth && i > 0) { context.fillText(line, x, y); line = char; y += lineHeight; } else { line = testLine; } } context.fillText(line, x, y); }
+        function downloadCard() { const link = document.createElement('a'); link.download = '心靈屬性身分證.png'; link.href = idCardCanvas.toDataURL('image/png'); link.click(); }
+        function restartQuiz() { startQuiz1(); }
+        
+        startBtn.addEventListener('click', startQuiz1);
+        backBtn1.addEventListener('click', goBackQuiz1);
+        acceptRecommendationBtn.addEventListener('click', acceptRecommendation);
+        chooseMyselfBtn.addEventListener('click', showAttributeGrid);
+        backBtn2.addEventListener('click', goBackQuiz2);
+        imageUpload.addEventListener('change', handleImageUpload);
+        generateCardBtn.addEventListener('click', generateIdCard);
+        downloadCardBtn.addEventListener('click', downloadCard);
+        restartBtn.addEventListener('click', restartQuiz);
+    </script>
+</body>
+</html>
+
+
+
+
+
